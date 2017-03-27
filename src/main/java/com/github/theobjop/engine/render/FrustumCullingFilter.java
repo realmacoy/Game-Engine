@@ -1,6 +1,7 @@
 package com.github.theobjop.engine.render;
 
 import com.github.theobjop.engine.game.GameObject;
+import com.github.theobjop.engine.render.model.Mesh;
 import org.joml.FrustumIntersection;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;

@@ -11,6 +11,9 @@ import com.github.theobjop.engine.game.anim.AnimatedFrame;
 import com.github.theobjop.engine.render.light.DirectionalLight;
 import com.github.theobjop.engine.render.light.PointLight;
 import com.github.theobjop.engine.render.light.SpotLight;
+import com.github.theobjop.engine.render.model.InstancedMesh;
+import com.github.theobjop.engine.render.model.Material;
+import com.github.theobjop.engine.render.model.Mesh;
 import com.github.theobjop.engine.render.particle.IParticleEmitter;
 import com.github.theobjop.game.Main;
 import org.joml.Matrix3f;
@@ -46,12 +49,14 @@ public class Renderer {
 
     private final FrustumCullingFilter frustumFilter;
 
+    private final List<Material> materials;
     private final List<GameObject> filteredItems;
 
     public Renderer() {
         specularPower = 10f;
         frustumFilter = new FrustumCullingFilter();
         filteredItems = new ArrayList<>();
+        materials = new ArrayList<>();
         init();
     }
 
@@ -72,7 +77,7 @@ public class Renderer {
         frustumFilter.filter(scene.getGameInstancedMeshes());
 
         // Render depth map before view ports has been set up
-        renderDepthMap(transformation, camera, scene);
+        renderDepthMap(transformation, scene);
 
         glViewport(0, 0, Main.getWindow().getWidth(), Main.getWindow().getHeight());
 
@@ -201,7 +206,7 @@ public class Renderer {
         particlesShaderProgram.unbind();
     }
 
-    private void renderDepthMap(Transformation transformation, Camera camera, Scene scene) {
+    private void renderDepthMap(Transformation transformation, Scene scene) {
         if (scene.isRenderShadows()) {
             // Setup view port to match the texture size
             glBindFramebuffer(GL_FRAMEBUFFER, shadowMap.getDepthMapFBO());
@@ -253,7 +258,7 @@ public class Renderer {
             Matrix4f modelViewMatrix = transformation.buildModelViewMatrix(skyBox, viewMatrix);
             skyBoxShaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
             skyBoxShaderProgram.setUniform("ambientLight", scene.getSceneLight().getSkyBoxLight());
-            skyBoxShaderProgram.setUniform("colour", mesh.getMaterial().getColour());
+            skyBoxShaderProgram.setUniform("colour", mesh.getMaterial().getAmbient());
             skyBoxShaderProgram.setUniform("hasTexture", mesh.getMaterial().isTextured() ? 1 : 0);
 
             mesh.render();
@@ -276,7 +281,8 @@ public class Renderer {
         Matrix4f viewMatrix = camera.getViewMatrix();
 
         SceneLight sceneLight = scene.getSceneLight();
-        renderLights(viewMatrix, sceneLight);
+        if (sceneLight != null)
+            renderLights(viewMatrix, sceneLight);
 
         sceneShaderProgram.setUniform("fog", scene.getFog());
         sceneShaderProgram.setUniform("texture_sampler", 0);
@@ -466,6 +472,10 @@ public class Renderer {
 
             glPopMatrix();
         }
+    }
+
+    public List<Material> getMaterials() {
+        return this.materials;
     }
 
     public void cleanup() {

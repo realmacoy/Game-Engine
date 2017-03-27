@@ -20,6 +20,9 @@ public class Texture {
     private final int width;
     private final int height;
 
+    public String type;
+    public String path;
+
     private int numRows = 1;
     private int numCols = 1;
 

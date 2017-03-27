@@ -1,7 +1,7 @@
 package com.github.theobjop.engine.render.particle;
 
 import com.github.theobjop.engine.game.GameObject;
-import com.github.theobjop.engine.render.Mesh;
+import com.github.theobjop.engine.render.model.Mesh;
 import com.github.theobjop.engine.render.Texture;
 import org.joml.Vector3f;
 

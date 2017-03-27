@@ -1,6 +1,6 @@
 package com.github.theobjop.engine.game;
 
-import com.github.theobjop.engine.render.Mesh;
+import com.github.theobjop.engine.render.model.Mesh;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -14,13 +14,10 @@ public class GameObject {
     private Mesh[] meshes;
 
     private final Vector3f position;
-
-    private float scale;
-
     private final Quaternionf rotation;
 
+    private float scale;
     private int textPos;
-
     private boolean insideFrustum;
 
     public GameObject() {

@@ -4,6 +4,8 @@ import com.github.theobjop.engine.component.InputComponent;
 import com.github.theobjop.engine.game.GameObject;
 import com.github.theobjop.engine.game.SkyBox;
 import com.github.theobjop.engine.render.*;
+import com.github.theobjop.engine.render.model.InstancedMesh;
+import com.github.theobjop.engine.render.model.Mesh;
 import com.github.theobjop.engine.render.particle.IParticleEmitter;
 import com.github.theobjop.engine.render.weather.Fog;
 

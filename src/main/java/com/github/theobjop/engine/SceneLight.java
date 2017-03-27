@@ -10,6 +10,16 @@ import org.joml.Vector3f;
  */
 public class SceneLight {
 
+    public static final SceneLight DEFAULT;
+    static {
+        SceneLight defaultSceneLight = new SceneLight();
+        defaultSceneLight.setAmbientLight(new Vector3f(1,1,1));
+        DirectionalLight defaultDirectionalLight = new DirectionalLight(new Vector3f(1,1,1), new Vector3f(1,1,1), 1f);
+        defaultSceneLight.setDirectionalLight(defaultDirectionalLight);
+
+        DEFAULT = defaultSceneLight;
+    }
+
     private Vector3f ambientLight;
     private Vector3f skyBoxLight;
     private PointLight[] pointLightList;

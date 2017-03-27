@@ -1,7 +1,7 @@
 package com.github.theobjop.engine.game.anim;
 
 import com.github.theobjop.engine.game.GameObject;
-import com.github.theobjop.engine.render.Mesh;
+import com.github.theobjop.engine.render.model.Mesh;
 import org.joml.Matrix4f;
 
 import java.util.List;

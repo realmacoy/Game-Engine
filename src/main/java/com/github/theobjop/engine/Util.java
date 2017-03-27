@@ -2,6 +2,7 @@ package com.github.theobjop.engine;
 
 import com.sun.javaws.Main;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.PointerBuffer;
 
 import java.awt.*;
 import java.io.*;
@@ -66,6 +67,10 @@ public class Util {
         buffer.flip();
         newBuffer.put(buffer);
         return newBuffer;
+    }
+
+    public static PointerBuffer longToPointer(long pointer) {
+        return BufferUtils.createPointerBuffer(1).put(pointer);
     }
 
     public static float rnd() {
@@ -278,7 +283,7 @@ public class Util {
         }
 
         public URL getResource(String ref) {
-            URL url = Util.class.getClassLoader().getResource(ref);
+            URL url = Main.class.getResource(ref);
             if (url==null) {
                 try {
                     File f = createFile(ref);

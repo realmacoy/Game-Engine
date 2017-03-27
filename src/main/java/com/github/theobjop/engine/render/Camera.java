@@ -1,8 +1,10 @@
 package com.github.theobjop.engine.render;
 
 import com.github.theobjop.engine.component.InputComponent;
+import com.github.theobjop.engine.game.GameObject;
 import com.github.theobjop.engine.game.TextObject;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import static java.lang.Math.toRadians;
@@ -48,6 +50,11 @@ public class Camera {
         input.update(this, delta);
     }
 
+    public void lookAt(GameObject go) {
+        Matrix4f dest = viewMatrix.lookAt(this.getPosition(), go.getPosition(), new Vector3f(0,1,0), new Matrix4f());
+        this.setRotation(dest.getEulerAnglesZYX(new Vector3f()).normalize());
+    }
+
     public void movePosition(float offsetX, float offsetY, float offsetZ) {
         if ( offsetZ != 0 ) {
             position.x += (float)Math.sin(Math.toRadians(rotation.y)) * -1.0f * offsetZ;
@@ -76,6 +83,10 @@ public class Camera {
         rotation.x = x;
         rotation.y = y;
         rotation.z = z;
+    }
+
+    private void setRotation(Vector3f vec) {
+        this.setRotation(vec.x, vec.y, vec.z);
     }
 
     public void moveRotation(float offsetX, float offsetY, float offsetZ) {

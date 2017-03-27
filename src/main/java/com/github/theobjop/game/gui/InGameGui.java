@@ -4,6 +4,7 @@ import com.github.theobjop.engine.game.GameObject;
 import com.github.theobjop.engine.game.TextObject;
 import com.github.theobjop.engine.gui.Gui;
 import com.github.theobjop.engine.gui.IGui;
+import com.github.theobjop.engine.render.Transformation;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class InGameGui extends Gui implements IGui {
         //guiItems.add(textObject);
 
         for (TextObject to : guiItems) {
-            to.getMesh().getMaterial().setColour(new Vector3f(1,1,1));
+            to.getMesh().getMaterial().setAmbient(new Vector3f(1,1,1));
         }
         addIGui(this); // So we fetch "GuiItems" for rendering.
     }
@@ -35,6 +36,9 @@ public class InGameGui extends Gui implements IGui {
     public void update() {
 
     }
+
+    @Override
+    public void render(Transformation transformation) { }
 
     @Override
     public List<? extends GameObject> getObjects() {

@@ -2,8 +2,8 @@ package com.github.theobjop.engine.game;
 
 import com.github.theobjop.engine.Util;
 import com.github.theobjop.engine.render.FontTexture;
-import com.github.theobjop.engine.render.Material;
-import com.github.theobjop.engine.render.Mesh;
+import com.github.theobjop.engine.render.model.Material;
+import com.github.theobjop.engine.render.model.Mesh;
 
 import java.util.ArrayList;
 import java.util.List;

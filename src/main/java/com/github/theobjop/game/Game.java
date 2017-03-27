@@ -5,6 +5,7 @@ import com.github.theobjop.engine.gui.Gui;
 import com.github.theobjop.engine.render.Transformation;
 import com.github.theobjop.game.gui.InGameGui;
 import com.github.theobjop.game.scene.GameScene;
+import com.github.theobjop.game.scene.ModelScene;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -16,7 +17,7 @@ public class Game {
 
     public Game() {
         transformation = new Transformation();
-        setScene(new GameScene());
+        setScene(new ModelScene());
         setGui(new InGameGui());
     }
 

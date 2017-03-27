@@ -1,8 +1,8 @@
 package com.github.theobjop.engine.game;
 
-import com.github.theobjop.engine.loader.OBJLoader;
-import com.github.theobjop.engine.render.Material;
-import com.github.theobjop.engine.render.Mesh;
+import com.github.theobjop.engine.loader.obj.OBJLoader;
+import com.github.theobjop.engine.render.model.Material;
+import com.github.theobjop.engine.render.model.Mesh;
 import com.github.theobjop.engine.render.Texture;
 import org.joml.Vector3f;
 

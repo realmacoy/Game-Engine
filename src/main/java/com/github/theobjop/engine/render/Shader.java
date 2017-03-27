@@ -3,6 +3,7 @@ package com.github.theobjop.engine.render;
 import com.github.theobjop.engine.render.light.DirectionalLight;
 import com.github.theobjop.engine.render.light.PointLight;
 import com.github.theobjop.engine.render.light.SpotLight;
+import com.github.theobjop.engine.render.model.Material;
 import com.github.theobjop.engine.render.weather.Fog;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -28,6 +29,7 @@ public class Shader {
     private int geometryShaderId;
 
     private final Map<String, Integer> uniforms;
+    private final Map<String, Integer> attributes;
 
     public Shader() {
         programId = glCreateProgram();
@@ -35,6 +37,14 @@ public class Shader {
             throw new RuntimeException("Could not create Shader");
         }
         uniforms = new HashMap<>();
+        attributes = new HashMap<>();
+    }
+
+    public void createAttribute(String attributeName) {
+        int attributeLocation = glGetAttribLocation(programId, attributeName);
+        if (attributeLocation < 0)
+            throw new RuntimeException("Could not find attribute: " + attributeLocation);
+        attributes.put(attributeName, attributeLocation);
     }
 
     public void createUniform(String uniformName) {
@@ -79,9 +89,12 @@ public class Shader {
     }
 
     public void createMaterialUniform(String uniformName) {
-        createUniform(uniformName + ".colour");
+        createUniform(uniformName + ".ambient");
+        createUniform(uniformName + ".diffuse");
+        createUniform(uniformName + ".specular");
         createUniform(uniformName + ".hasTexture");
         createUniform(uniformName + ".hasNormalMap");
+        createUniform(uniformName + ".Ns");
         createUniform(uniformName + ".reflectance");
     }
 
@@ -89,6 +102,18 @@ public class Shader {
         createUniform(uniformName + ".activeFog");
         createUniform(uniformName + ".colour");
         createUniform(uniformName + ".density");
+    }
+
+    public void setAttribute(String attribute, float value) {
+        glVertexAttrib1f(uniforms.get(attribute), value);
+    }
+
+    public void setAttribute(String attribute, Vector3f value) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer fb = stack.mallocFloat(16);
+            value.get(fb);
+            glVertexAttrib4fv(attributes.get(attribute), fb);
+        }
     }
 
     public void setUniform(String uniformName, Matrix4f value) {
@@ -168,9 +193,12 @@ public class Shader {
     }
 
     public void setUniform(String uniformName, Material material) {
-        setUniform(uniformName + ".colour", material.getColour());
+        setUniform(uniformName + ".ambient", material.getAmbient());
+        setUniform(uniformName + ".diffuse", material.getDiffuse());
+        setUniform(uniformName + ".specular", material.getSpecular());
         setUniform(uniformName + ".hasTexture", material.isTextured() ? 1 : 0);
         setUniform(uniformName + ".hasNormalMap", material.hasNormalMap() ? 1 : 0);
+        setUniform(uniformName + ".Ns", material.getNs());
         setUniform(uniformName + ".reflectance", material.getReflectance());
     }
 

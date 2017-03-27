@@ -7,17 +7,23 @@ import com.github.theobjop.engine.game.Player;
 import com.github.theobjop.engine.game.SkyBox;
 import com.github.theobjop.engine.input.Keyboard;
 import com.github.theobjop.engine.input.Mouse;
-import com.github.theobjop.engine.loader.OBJLoader;
+import com.github.theobjop.engine.loader.AssimpLoader;
 import com.github.theobjop.engine.loader.md5.MD5AnimModel;
 import com.github.theobjop.engine.loader.md5.MD5Loader;
 import com.github.theobjop.engine.loader.md5.MD5Model;
+import com.github.theobjop.engine.loader.obj.OBJLoader;
 import com.github.theobjop.engine.render.*;
 import com.github.theobjop.engine.render.light.DirectionalLight;
+import com.github.theobjop.engine.render.model.Material;
+import com.github.theobjop.engine.render.model.Mesh;
 import com.github.theobjop.game.component.CameraInputComponent;
 import com.github.theobjop.game.component.PlayerInputComponent;
 import org.joml.Vector3f;
+import org.lwjgl.assimp.Assimp;
 
+import static org.lwjgl.assimp.Assimp.*;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_L;
 
 /**
  * Created by Brandon on 2/28/2017.
@@ -25,12 +31,13 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 public class GameScene extends Scene {
 
     private Player player;
-    private GameObject monster;
+    private GameObject monster, bear, boat;
 
     private static final float SKYBOX_SCALE = 100.0f;
 
     public GameScene() {
         super();
+
         camera = new Camera(new CameraInputComponent());
         skyBox = new SkyBox("/models/skybox.obj", new Vector3f(0.65f, 0.65f, 0.65f));
         skyBox.setScale(SKYBOX_SCALE);
@@ -47,28 +54,28 @@ public class GameScene extends Scene {
         skyBoxMesh.deleteBuffers();
 
         player = new Player(new PlayerInputComponent());
-        super.addGameObjects(player);
+        //super.addGameObjects(player);
 
         // Create new Monster with MD5 Mesh
         monster = MD5Loader.process(MD5Model.parse("/models/monster/monster.md5mesh"),
                 MD5AnimModel.parse("/models/monster/monster.md5anim"), new Vector3f(1,1,1));
-
+        monster.getPosition().z+=2;
         monster.getRotation().rotateX(-1.5554338f);
         monster.setScale(0.01f);
         super.addGameObjects(monster);
 
-        // Create wood mesh
-        Texture woodTex = new Texture("/textures/wood.png");
-        Material wood = new Material(woodTex);
-        Mesh woodMesh = new Mesh("/models/wood_wall.obj", wood);
+        Mesh bearMesh = OBJLoader.loadMesh("/models/animals/bear-obj.obj");
+        bearMesh.setMaterial(new Material(new Vector3f(1,1,1), 1f));
+        bear = new GameObject(bearMesh);
+        bear.setScale(0.1f);
+        //super.addGameObjects(bear);
 
-        // Create new wall
-        GameObject woodWall = new GameObject();
-        woodWall.setPosition(0, -0.5f, 0);
-        woodWall.setMesh(woodMesh);
-
-        // Add it to the scene and bind the woodWall with the mesh
-        super.addGameObjects(woodWall);
+        Mesh[] boatLoader = new AssimpLoader.Builder("/models/airboat.obj",
+                aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType)
+                .build();
+        boat = new GameObject(boatLoader);
+        boat.setScale(0.1f);
+        super.addGameObjects(boat);
 
         Texture texture = new Texture("/textures/grassblock.png");
         Material material = new Material(texture, 1f);
@@ -118,6 +125,10 @@ public class GameScene extends Scene {
         // Use the camera before editing values...
         if (escapeWatcher.wasReleased())
             Mouse.toggle();
+
+        if (Keyboard.isKeyDown(GLFW_KEY_L)) {
+            camera.setPosition(boat.getPosition());
+        }
 
         player.update(delta, !camera.isNoclip());
         camera.update(delta);

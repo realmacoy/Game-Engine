@@ -5,6 +5,7 @@ import com.github.theobjop.engine.game.TextObject;
 import com.github.theobjop.engine.gui.Gui;
 import com.github.theobjop.engine.gui.IGui;
 import com.github.theobjop.engine.render.FontTexture;
+import com.github.theobjop.engine.render.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,9 @@ public class MenuGui extends Gui implements IGui {
 
     @Override
     public void update() { }
+
+    @Override
+    public void render(Transformation transformation) { }
 
     @Override
     public List<? extends GameObject> getObjects() {

@@ -44,9 +44,12 @@ struct DirectionalLight
 
 struct Material
 {
-    vec3 colour;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
     int hasTexture;
     int hasNormalMap;
+    float Ns;
     float reflectance;
 };
 
@@ -69,28 +72,41 @@ uniform Fog fog;
 uniform sampler2D shadowMap;
 uniform int renderShadow;
 
-vec4 calcLightColour(vec3 light_colour, float light_intensity, vec3 position, vec3 to_light_dir, vec3 normal)
-{
-    vec4 diffuseColour = vec4(0, 0, 0, 0);
-    vec4 specColour = vec4(0, 0, 0, 0);
+// Phong Reflection Model
+// Ip = Ka * Ia + [Sum of all lights( where m = each light )] -> (Kd(Lm * N)I(m,d) + Ks(Rm * V)^(shininess)*I(m,s))
+// Rm = 2(Lm * N)N-Lm // Where Lm and N are normalized.
+// Lm, N, Rm, and V are all normalized.
+
+// Lm = which is the direction vector from the point on the surface toward each light source (the light source (position))
+// N  = Normal (normal)
+// Rm(hat) = which is the direction that a perfectly reflected ray of light would take from this point on the surface
+//  - Rm = 2(Lm * N)N-Lm
+// V  = which is the direction pointing towards the viewer (to_light_dir)
+
+// In this particular function, light_pos and normal are both already normalized.
+// Vert_Pos = Camera's Position (V)
+// Light_Dir = Light's Direction
+vec4 calcLightColour(vec3 light_colour, float light_intensity, vec3 position, vec3 to_light_dir, vec3 normal) {
+
+    vec4 Kd = vec4(material.diffuse, 0.0);
+    vec4 Ks = vec4(material.specular, 0.0);
 
     // Diffuse Light
     float diffuseFactor = max(dot(normal, to_light_dir), 0.0);
-    diffuseColour = vec4(light_colour, 1.0) * light_intensity * diffuseFactor;
+    vec4 diffuseColour = Kd * vec4(light_colour, 1.0) * light_intensity * diffuseFactor;
 
     // Specular Light
     vec3 camera_direction = normalize(-position);
     vec3 from_light_dir = -to_light_dir;
     vec3 reflected_light = normalize(reflect(from_light_dir , normal));
     float specularFactor = max( dot(camera_direction, reflected_light), 0.0);
-    specularFactor = pow(specularFactor, specularPower);
-    specColour = light_intensity  * specularFactor * material.reflectance * vec4(light_colour, 1.0);
+    specularFactor = pow(specularFactor, specularPower * material.Ns);
+    vec4 specColour = Ks * light_intensity  * specularFactor * material.reflectance * vec4(light_colour, 1.0);
 
     return (diffuseColour + specColour);
 }
 
-vec4 calcPointLight(PointLight light, vec3 position, vec3 normal)
-{
+vec4 calcPointLight(PointLight light, vec3 position, vec3 normal) {
     vec3 light_direction = light.position - position;
     vec3 to_light_dir  = normalize(light_direction);
     vec4 light_colour = calcLightColour(light.colour, light.intensity, position, to_light_dir, normal);
@@ -102,8 +118,7 @@ vec4 calcPointLight(PointLight light, vec3 position, vec3 normal)
     return light_colour / attenuationInv;
 }
 
-vec4 calcSpotLight(SpotLight light, vec3 position, vec3 normal)
-{
+vec4 calcSpotLight(SpotLight light, vec3 position, vec3 normal) {
     vec3 light_direction = light.pl.position - position;
     vec3 to_light_dir  = normalize(light_direction);
     vec3 from_light_dir  = -to_light_dir;
@@ -111,21 +126,18 @@ vec4 calcSpotLight(SpotLight light, vec3 position, vec3 normal)
 
     vec4 colour = vec4(0, 0, 0, 0);
 
-    if ( spot_alfa > light.cutoff )
-    {
+    if ( spot_alfa > light.cutoff ) {
         colour = calcPointLight(light.pl, position, normal);
         colour *= (1.0 - (1.0 - spot_alfa)/(1.0 - light.cutoff));
     }
     return colour;
 }
 
-vec4 calcDirectionalLight(DirectionalLight light, vec3 position, vec3 normal)
-{
+vec4 calcDirectionalLight(DirectionalLight light, vec3 position, vec3 normal) {
     return calcLightColour(light.colour, light.intensity, position, normalize(light.direction), normal);
 }
 
-vec4 calcFog(vec3 pos, vec4 colour, Fog fog, vec3 ambientLight, DirectionalLight dirLight)
-{
+vec4 calcFog(vec3 pos, vec4 colour, Fog fog, vec3 ambientLight, DirectionalLight dirLight) {
     vec3 fogColor = fog.colour * (ambientLight + dirLight.colour * dirLight.intensity);
     float distance = length(pos);
     float fogFactor = 1.0 / exp( (distance * fog.density)* (distance * fog.density));
@@ -135,25 +147,19 @@ vec4 calcFog(vec3 pos, vec4 colour, Fog fog, vec3 ambientLight, DirectionalLight
     return vec4(resultColour.xyz, 1);
 }
 
-vec4 calcBaseColour(Material material, vec2 text_coord)
-{
+vec4 calcBaseColour(Material material, vec2 text_coord) {
     vec4 baseColour;
-    if ( material.hasTexture == 1 )
-    {
+    if ( material.hasTexture == 1 ) {
         baseColour = texture(texture_sampler, text_coord);
-    }
-    else
-    {
-        baseColour = vec4(material.colour, 1);
+    } else {
+        baseColour = vec4(material.ambient, 1);
     }
     return baseColour;
 }
 
-vec3 calcNormal(Material material, vec3 normal, vec2 text_coord, mat4 modelViewMatrix)
-{
+vec3 calcNormal(Material material, vec3 normal, vec2 text_coord, mat4 modelViewMatrix) {
     vec3 newNormal = normal;
-    if ( material.hasNormalMap == 1 )
-    {
+    if ( material.hasNormalMap == 1 ) {
         newNormal = texture(normalMap, text_coord).rgb;
         newNormal = normalize(newNormal * 2 - 1);
         newNormal = normalize(modelViewMatrix * vec4(newNormal, 0.0)).xyz;
@@ -161,66 +167,55 @@ vec3 calcNormal(Material material, vec3 normal, vec2 text_coord, mat4 modelViewM
     return newNormal;
 }
 
-float calcShadow(vec4 position)
-{
-    if ( renderShadow == 0 )
-    {
+float calcShadow(vec4 position) {
+    if ( renderShadow == 0 ) {
         return 1.0;
     }
 
     vec3 projCoords = position.xyz;
     // Transform from screen coordinates to texture coordinates
     projCoords = projCoords * 0.5 + 0.5;
-    float bias = 0.05;
+    float bias = 0.005;
 
     float shadowFactor = 0.0;
     vec2 inc = 1.0 / textureSize(shadowMap, 0);
-    for(int row = -1; row <= 1; ++row)
-    {
-        for(int col = -1; col <= 1; ++col)
-        {
+    for(int row = -1; row <= 1; ++row) {
+        for(int col = -1; col <= 1; ++col) {
             float textDepth = texture(shadowMap, projCoords.xy + vec2(row, col) * inc).r;
             shadowFactor += projCoords.z - bias > textDepth ? 1.0 : 0.0;
         }
     }
     shadowFactor /= 9.0;
 
-    if(projCoords.z > 1.0)
-    {
+    if(projCoords.z > 1.0) {
         shadowFactor = 1.0;
     }
 
     return 1 - shadowFactor;
 }
 
-void main()
-{
-    vec4 baseColour = calcBaseColour(material, outTexCoord);
+void main() {
+    vec4 mtlAmbient = calcBaseColour(material, outTexCoord);
     vec3 currNomal = calcNormal(material, mvVertexNormal, outTexCoord, outModelViewMatrix);
 
     vec4 totalLight = calcDirectionalLight(directionalLight, mvVertexPos, currNomal);
 
-    for (int i=0; i<MAX_POINT_LIGHTS; i++)
-    {
-        if ( pointLights[i].intensity > 0 )
-        {
+    for (int i=0; i<MAX_POINT_LIGHTS; i++) {
+        if ( pointLights[i].intensity > 0 ) {
             totalLight += calcPointLight(pointLights[i], mvVertexPos, currNomal);
         }
     }
 
-    for (int i=0; i<MAX_SPOT_LIGHTS; i++)
-    {
-        if ( spotLights[i].pl.intensity > 0 )
-        {
+    for (int i=0; i<MAX_SPOT_LIGHTS; i++) {
+        if ( spotLights[i].pl.intensity > 0 ) {
             totalLight += calcSpotLight(spotLights[i], mvVertexPos, currNomal);
         }
     }
 
     float shadow = calcShadow(mlightviewVertexPos);
-    fragColor = baseColour * ( vec4(ambientLight, 1.0) + totalLight * shadow );
+    fragColor = mtlAmbient * ( vec4(ambientLight, 1.0) + totalLight * shadow );
 
-    if ( fog.activeFog == 1 )
-    {
+    if ( fog.activeFog == 1 ) {
         fragColor = calcFog(mvVertexPos, fragColor, fog, ambientLight, directionalLight);
     }
 
