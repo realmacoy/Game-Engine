@@ -35,7 +35,6 @@ public class ModelScene extends Scene {
         camera.setPosition(0,0,0);
 
         Texture texture = new Texture("/textures/grassblock.png");
-        Texture playerTexture = new Texture("/textures/default_player.png");
         Material material = new Material(texture, 1f);
         Material playerMat = new Material(new Vector3f(1,0,0), 1f);
 
